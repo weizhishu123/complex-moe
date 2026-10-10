@@ -1,0 +1,39 @@
+﻿# ComplexMoE v15 训练配置
+
+# 模型
+D: 384
+num_layers: 4
+num_experts: 4
+top_k: 2
+ffn_ratio: 4
+dropout: 0.1
+MAX_K: 256
+
+# 数据
+data_files:
+  - /root/1.jsonl
+  - /root/2.jsonl
+  - /root/3.jsonl
+n_gongwen: 2100000
+wiki_path: /root/wiki_clean.txt
+n_wiki: 900000
+bpe_path: /root/hdc/bpe_v72_8000.model
+seq_maxlen: 1024
+
+# 训练
+batch_size: 32
+grad_accum: 8
+samples_per_epoch: 8000000
+lr: 0.0003
+warmup_steps: 1000
+grad_clip: 1.0
+aux_loss_weight: 0.01
+use_amp: false
+
+# K 范围
+K_MIN: 32
+K_MAX: 256
+base: 10000.0
+
+# 输出
+ckpt_dir: /root/hdc/checkpoints_v15

@@ -1,0 +1,30 @@
+﻿__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# 模型权重 (上传到 HuggingFace)
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+
+# 训练数据 (太大, 不上传)
+1.jsonl
+2.jsonl
+3.jsonl
+4.jsonl
+5.jsonl
+6.jsonl
+7.jsonl
+8.jsonl
+wiki_clean.txt
+
+# 测试数据例外
+!test_data.jsonl
+
+# 系统
+.DS_Store
+Thumbs.db
