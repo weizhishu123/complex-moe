@@ -1,26 +1,35 @@
-﻿# ComplexMoE: 复数混合专家中文语言模型
+﻿# ComplexMoE: 复数混合专家语言模型
 
-**48.62M 参数 | 单张 GTX 1080 Ti 训练 | 中文公文/新闻专用**
+**48.62M 参数 | 单张 GTX 1080 Ti 训练 | 通用架构 + 中文公文/新闻语料**
 
 ## 简介
 
-ComplexMoE 是一个 48.62M 参数的复数混合专家（Mixture-of-Experts）语言模型，专为中文公文/新闻场景设计。在单张消费级 GPU 上完成 2 亿 token 训练。
+ComplexMoE 是一个 48.62M 参数的复数混合专家（Mixture-of-Experts）语言模型。
 
-## 核心特性
+**架构是领域无关的通用设计**，训练语料为中文公文与新闻文本（约 2 亿 token）。
 
-- 复数架构：注意力与 MoE 在复数域运算，位置信息通过相位旋转注入
-- RoPE++ 位置编码：每层 Q/K 相对注入，非输入端一次性注入
-- 多 K 训练：训练时 K 在 [32, 256] 随机采样，全范围可用
-- 动态 base：base=10000，K=5 到 K=256 都稳定
-- 短 prompt 友好：多 K 训练让模型适应短输入+填充模式，不锁死
+## 架构 vs 数据
+
+| 层 | 说明 |
+|----|------|
+| **架构** | 复数 Attention + 复数 MoE + RoPE++ + 多 K 训练。**领域无关**，可迁移到任意语言/领域 |
+| **训练数据** | 中文公文/新闻，约 2 亿 token |
+| **模型能力** | 仅在训练数据分布内验证，其他领域未测 |
+
+架构创新点：
+- **复数 Attention**：Q/K/V 在复数域运算，位置通过相位旋转注入
+- **复数 MoE**：N 个复数专家 + top-k 路由
+- **RoPE++**：每层 Q/K 相对位置注入
+- **多 K 训练**：训练时 K 在 [32, 256] 随机采样，全范围可用
+- **base=10000**：K=5 到 K=256 范围内稳定
 
 ## 快速开始
 
-### 安装
+安装：
 
 pip install -r requirements.txt
 
-### 生成
+生成：
 
 import torch
 import sentencepiece as spm
@@ -48,39 +57,47 @@ for _ in range(150):
     ctx.append(int(lg[0].argmax()))
 print(sp.decode(ctx))
 
-### 训练
-
-python train/train.py --config configs/v15.yaml
-
 ## 评测结果
 
-| 指标 | ComplexMoE-48M | GPT-2 small |
-|------|----------------|-------------|
+| 指标 | ComplexMoE-48M | GPT-2 small (117M) |
+|------|----------------|---------------------|
 | 参数 | 48.62M | 117M |
-| 中文公文 4-gram 重复率 | 1.60% | N/A |
+| 架构 | 复数 MoE（通用） | 实数 Transformer（通用） |
+| 训练语料 | 中文公文/新闻 2 亿 token | 英文 WebText 40 GB |
+| 中文公文续写 4-gram 重复率 | 1.60% | N/A（无中文能力） |
 | K=5 NLL | 6.52 | - |
 | K=256 top1 | 0.19 | - |
 | 训练硬件 | 单张 GTX 1080 Ti | - |
+
+## 限制
+
+- 训练语料仅中文公文/新闻，未覆盖其他领域
+- 通用能力（对话、百科、代码等）未验证
+- 上下文窗口 256 token
 
 ## 架构
 
 Input tokens
     |
-Complex Embedding
+Complex Embedding (a, b 归一化为单位圆)
     |
-ComplexBlock x 4
-  - Complex Attention (RoPE)
-  - ComplexMoE (4 experts, top-2)
-  - Residual + LayerNorm
+ComplexBlock x 4          <- 通用组件, 与领域无关
+  - Complex Attention (RoPE 旋转)
+  - ComplexMoE (4 专家, top-2)
+  - 残差连接 + LayerNorm
     |
-Final Head -> logits (8000 vocab)
+Final Head -> logits (8000 词表)
+
+**架构本身可用于**: 任何语言、任何领域、任何规模的 MoE 变体。
+本仓库的权重只是在中文公文/新闻上训练的**一个实例**。
 
 ## 引用
 
 @misc{yang2025complexmoe,
-  title={ComplexMoE: A 48M-Parameter Complex-Valued Mixture-of-Experts Language Model for Chinese},
+  title={ComplexMoE: A Complex-Valued Mixture-of-Experts Language Model Architecture},
   author={Yang, Peng},
-  year={2025}
+  year={2025},
+  url={https://github.com/weizhishu123/complex-moe}
 }
 
 ## 许可证
